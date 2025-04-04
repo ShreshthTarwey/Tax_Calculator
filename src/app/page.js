@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaxCalculator from '@/components/TaxCalculator';
 import TaxSuggestion from '@/components/TaxSuggestion';
+import TaxComparison from '@/components/TaxComparison';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
@@ -101,7 +102,7 @@ export default function Home() {
           />
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+        <div className="grid grid-cols-1 gap-8 mt-12">
           <motion.div 
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -192,13 +193,13 @@ export default function Home() {
                     <h3 className="text-lg font-medium text-purple-300">Tax Slabs Breakdown</h3>
                     <div className="space-y-2">
                       {taxResult.taxSlabs.map((slab, index) => (
-                        <motion.div 
+                        <motion.div
                           key={index}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.2, delay: index * 0.05 }}
-                          whileHover={{ scale: 1.01, backgroundColor: 'rgba(75, 85, 99, 0.6)' }}
-                          className="bg-gray-700/50 p-3 rounded backdrop-blur-sm border border-purple-500/10 hover:border-purple-500/30 transition-colors duration-200"
+                          whileHover={{ scale: 1.01, y: -5 }}
+                          className="bg-gray-700/50 p-3 rounded-lg backdrop-blur-sm border border-purple-500/10 hover:border-purple-500/30 transition-all duration-200"
                         >
                           <p className="text-sm text-gray-300">
                             {formatRange(slab.threshold, slab.nextThreshold, taxResult.originalCurrency)}
@@ -216,11 +217,32 @@ export default function Home() {
                       ))}
                     </div>
                   </motion.div>
-                  
-                  <TaxSuggestion income={income} />
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.div>
+
+          {/* Tax Comparison Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxComparison 
+              income={taxResult?.originalAmount} 
+              currency={taxResult?.originalCurrency} 
+            />
+          </motion.div>
+
+          {/* AI Tax Suggestions Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxSuggestion income={income} />
           </motion.div>
         </div>
       </motion.main>
