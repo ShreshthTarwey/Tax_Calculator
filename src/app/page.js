@@ -11,8 +11,6 @@ import Auth from '@/components/Auth';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import NotificationSystem from '../components/NotificationSystem';
-import { notificationScheduler } from '@/services/notificationScheduler';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
@@ -23,19 +21,9 @@ export default function Home() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      if (user) {
-        // Start notification scheduler when user logs in
-        notificationScheduler.start(user.uid);
-      } else {
-        // Stop notification scheduler when user logs out
-        notificationScheduler.stop();
-      }
     });
 
-    return () => {
-      unsubscribe();
-      notificationScheduler.stop();
-    };
+    return () => unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
@@ -59,15 +47,6 @@ export default function Home() {
     }
     return `${formatCurrency(start, currency)} - ${formatCurrency(end, currency)}`;
   }, [formatCurrency]);
-
-  // Update notification scheduler when new tax calculation is made
-  const handleCalculation = (result) => {
-    setTaxResult(result);
-    setIncome(result.income);
-    if (user) {
-      notificationScheduler.updateLastCalculation(result);
-    }
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -177,7 +156,10 @@ export default function Home() {
             className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
           >
             <TaxCalculator 
-              onCalculate={handleCalculation}
+              onCalculate={(result) => {
+                setTaxResult(result);
+                setIncome(result.income);
+              }}
             />
           </motion.div>
           
