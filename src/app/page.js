@@ -1,13 +1,50 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaxCalculator from '@/components/TaxCalculator';
 import TaxSuggestion from '@/components/TaxSuggestion';
+import TaxComparison from '@/components/TaxComparison';
+import TaxVisualization from '@/components/TaxVisualization';
+import TaxHistory from '@/components/TaxHistory';
+import Auth from '@/components/Auth';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import NotificationSystem from '../components/NotificationSystem';
+import { notificationScheduler } from '@/services/notificationScheduler';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
   const [income, setIncome] = useState('');
+  const [showAuth, setShowAuth] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      if (user) {
+        // Start notification scheduler when user logs in
+        notificationScheduler.start(user.uid);
+      } else {
+        // Stop notification scheduler when user logs out
+        notificationScheduler.stop();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      notificationScheduler.stop();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const formatCurrency = useCallback((amount, currency) => {
     if (currency === 'INR') {
@@ -22,6 +59,15 @@ export default function Home() {
     }
     return `${formatCurrency(start, currency)} - ${formatCurrency(end, currency)}`;
   }, [formatCurrency]);
+
+  // Update notification scheduler when new tax calculation is made
+  const handleCalculation = (result) => {
+    setTaxResult(result);
+    setIncome(result.income);
+    if (user) {
+      notificationScheduler.updateLastCalculation(result);
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -73,6 +119,28 @@ export default function Home() {
         />
       </motion.div>
 
+      {/* User authentication button */}
+      <div className="absolute top-4 right-4 z-20">
+        {user ? (
+          <div className="flex items-center space-x-4">
+            <p className="text-gray-300">{user.email}</p>
+            <button
+              onClick={handleSignOut}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAuth(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+          >
+            Sign In
+          </button>
+        )}
+      </div>
+
       <motion.main 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -101,7 +169,7 @@ export default function Home() {
           />
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+        <div className="grid grid-cols-1 gap-8 mt-12">
           <motion.div 
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -109,10 +177,7 @@ export default function Home() {
             className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
           >
             <TaxCalculator 
-              onCalculate={(result) => {
-                setTaxResult(result);
-                setIncome(result.income);
-              }}
+              onCalculate={handleCalculation}
             />
           </motion.div>
           
@@ -192,13 +257,13 @@ export default function Home() {
                     <h3 className="text-lg font-medium text-purple-300">Tax Slabs Breakdown</h3>
                     <div className="space-y-2">
                       {taxResult.taxSlabs.map((slab, index) => (
-                        <motion.div 
+                        <motion.div
                           key={index}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.2, delay: index * 0.05 }}
-                          whileHover={{ scale: 1.01, backgroundColor: 'rgba(75, 85, 99, 0.6)' }}
-                          className="bg-gray-700/50 p-3 rounded backdrop-blur-sm border border-purple-500/10 hover:border-purple-500/30 transition-colors duration-200"
+                          whileHover={{ scale: 1.01, y: -5 }}
+                          className="bg-gray-700/50 p-3 rounded-lg backdrop-blur-sm border border-purple-500/10 hover:border-purple-500/30 transition-all duration-200"
                         >
                           <p className="text-sm text-gray-300">
                             {formatRange(slab.threshold, slab.nextThreshold, taxResult.originalCurrency)}
@@ -216,14 +281,62 @@ export default function Home() {
                       ))}
                     </div>
                   </motion.div>
-                  
-                  <TaxSuggestion income={income} />
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
+
+          {/* Tax Comparison Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxComparison 
+              income={taxResult?.originalAmount} 
+              currency={taxResult?.originalCurrency} 
+            />
+          </motion.div>
+
+          {/* Tax Visualization Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxVisualization taxResult={taxResult} />
+          </motion.div>
+
+          {/* AI Tax Suggestions Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxSuggestion income={income} />
+          </motion.div>
+
+          {/* Tax History Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxHistory currentCalculation={taxResult} />
+          </motion.div>
         </div>
       </motion.main>
+
+      {/* Auth Modal */}
+      <AnimatePresence>
+        {showAuth && (
+          <Auth onClose={() => setShowAuth(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
