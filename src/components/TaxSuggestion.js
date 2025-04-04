@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_KEY = 'AIzaSyBEGZLMYv6_PsYa7hj7S8SX9yduNk-R0Wo';
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 export default function TaxSuggestion({ income }) {
   const [suggestions, setSuggestions] = useState([]);
