@@ -6,16 +6,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-export default function TaxSuggestion({ income }) {
+export default function TaxSuggestion({ income, country = 'India', currency = 'INR' }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (income) {
+    if (income && country) {
       getTaxSuggestion();
     }
-  }, [income]);
+  }, [income, country, currency]);
 
   const getTaxSuggestion = async () => {
     setLoading(true);
@@ -25,7 +25,18 @@ export default function TaxSuggestion({ income }) {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-      const prompt = `Given an annual income of $${income.toLocaleString()}, please provide 3-5 specific and practical suggestions for tax savings. Focus on legal and commonly available deductions, credits, and strategies. Keep the response concise and actionable. Format the response as a clean list without any asterisks or special formatting.`;
+      const formattedIncome = currency === 'INR' 
+        ? `₹${income.toLocaleString('en-IN')}`
+        : `$${income.toLocaleString()}`;
+
+      const prompt = `Provide 3 tax-saving strategies for a ${country} resident with annual income of ${formattedIncome}. Format each strategy exactly as follows:
+
+Strategy: [Name of tax-saving method]
+Details: [One clear sentence about how it works]
+Savings: [Estimated annual tax savings in ${formattedIncome}]
+Action: [One specific step to implement]
+
+Keep responses strictly focused on ${country}'s tax laws and common deductions.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -42,7 +53,7 @@ export default function TaxSuggestion({ income }) {
       const suggestionList = cleanText
         .split('\n')
         .map(s => s.trim())
-        .filter(s => s.length > 0);
+        .filter(s => s.length > 0 && !s.toLowerCase().includes('please provide'));
       
       setSuggestions(suggestionList);
     } catch (err) {
@@ -53,7 +64,7 @@ export default function TaxSuggestion({ income }) {
     }
   };
 
-  if (!income) return null;
+  if (!income || !country) return null;
 
   return (
     <motion.div 
@@ -68,7 +79,7 @@ export default function TaxSuggestion({ income }) {
         transition={{ duration: 0.5 }}
         className="text-2xl font-semibold text-purple-400 mb-4 relative inline-block"
       >
-        AI Tax Saving Suggestions
+        Tax Saving Suggestions for {country}
         <motion.span 
           className="absolute -bottom-1 left-0 w-full h-0.5 bg-purple-500"
           initial={{ scaleX: 0 }}
@@ -121,7 +132,7 @@ export default function TaxSuggestion({ income }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            className="space-y-4"
           >
             {suggestions.map((suggestion, index) => (
               <motion.div
@@ -140,7 +151,7 @@ export default function TaxSuggestion({ income }) {
                     <span className="text-purple-400 font-semibold">{index + 1}</span>
                   </motion.div>
                   <motion.p 
-                    className="text-gray-200 flex-grow"
+                    className="text-gray-200 flex-grow whitespace-pre-line"
                     whileHover={{ color: '#a78bfa' }}
                   >
                     {suggestion}

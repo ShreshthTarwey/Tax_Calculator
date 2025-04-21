@@ -158,6 +158,7 @@ export default function TaxCalculator({ onCalculate }) {
         netIncome,
         originalCurrency: currency,
         originalAmount: parseFloat(income),
+        country: country,
         taxSlabs
       });
       setIsCalculating(false);

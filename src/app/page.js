@@ -104,10 +104,10 @@ export default function Home() {
           />
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+        <div className="max-w-4xl mx-auto space-y-8 mt-12">
           <motion.div 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
             className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
           >
@@ -119,14 +119,14 @@ export default function Home() {
             />
           </motion.div>
           
-          <motion.div 
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
-          >
-            <AnimatePresence mode="wait">
-              {taxResult && (
+          {taxResult && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+            >
+              <AnimatePresence mode="wait">
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -220,40 +220,45 @@ export default function Home() {
                     </div>
                   </motion.div>
                   
-                  <TaxSuggestion income={income} />
+                  <TaxSuggestion 
+                    income={taxResult.income}
+                    country={taxResult.country}
+                    currency={taxResult.originalCurrency}
+                  />
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </div>
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-        {/* Tax Comparison Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-8"
-        >
-          <TaxComparisonGraph 
-            income={taxResult?.income} 
-            currency={taxResult?.originalCurrency}
-            onComparisonDataChange={setComparisonData}
-          />
-        </motion.div>
-
-        {/* Export Reports Section */}
-        {taxResult && comparisonData.length > 0 && (
+          {/* Tax Comparison Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
           >
-            <ExportReports 
-              taxResult={taxResult}
-              comparisonData={comparisonData}
+            <TaxComparisonGraph 
+              income={taxResult?.income} 
+              currency={taxResult?.originalCurrency}
+              onComparisonDataChange={setComparisonData}
             />
           </motion.div>
-        )}
+
+          {/* Export Reports Section */}
+          {taxResult && comparisonData.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+            >
+              <ExportReports 
+                taxResult={taxResult}
+                comparisonData={comparisonData}
+              />
+            </motion.div>
+          )}
+        </div>
       </motion.main>
     </div>
   );
