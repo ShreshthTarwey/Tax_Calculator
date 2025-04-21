@@ -46,7 +46,7 @@ const currencyRates = {
   INR: 83.25
 };
 
-export default function TaxComparisonGraph({ income, currency }) {
+export default function TaxComparisonGraph({ income, currency, onComparisonDataChange }) {
   const [comparisonData, setComparisonData] = useState([]);
 
   useEffect(() => {
@@ -115,7 +115,8 @@ export default function TaxComparisonGraph({ income, currency }) {
     });
 
     setComparisonData(data);
-  }, [income, currency]);
+    onComparisonDataChange(data);
+  }, [income, currency, onComparisonDataChange]);
 
   if (!income || comparisonData.length === 0) {
     return null;

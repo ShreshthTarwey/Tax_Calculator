@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TaxCalculator from '@/components/TaxCalculator';
 import TaxSuggestion from '@/components/TaxSuggestion';
 import TaxComparisonGraph from '@/components/TaxComparisonGraph';
+import ExportReports from '@/components/ExportReports';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
   const [income, setIncome] = useState('');
+  const [comparisonData, setComparisonData] = useState([]);
 
   const formatCurrency = useCallback((amount, currency) => {
     if (currency === 'INR') {
@@ -234,9 +236,24 @@ export default function Home() {
         >
           <TaxComparisonGraph 
             income={taxResult?.income} 
-            currency={taxResult?.originalCurrency} 
+            currency={taxResult?.originalCurrency}
+            onComparisonDataChange={setComparisonData}
           />
         </motion.div>
+
+        {/* Export Reports Section */}
+        {taxResult && comparisonData.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <ExportReports 
+              taxResult={taxResult}
+              comparisonData={comparisonData}
+            />
+          </motion.div>
+        )}
       </motion.main>
     </div>
   );
