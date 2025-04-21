@@ -71,7 +71,7 @@ export default function TaxCalculator({ onCalculate }) {
 
   const calculateTax = () => {
     setIsCalculating(true);
-    const annualIncome = parseFloat(convertedIncome);
+    const annualIncome = parseFloat(income);
     if (!annualIncome || annualIncome < 0) return;
 
     const rates = taxRates[country];
@@ -79,25 +79,70 @@ export default function TaxCalculator({ onCalculate }) {
     let remainingIncome = annualIncome;
     const taxSlabs = [];
 
-    for (let i = 0; i < rates.length; i++) {
-      const currentRate = rates[i];
-      const nextRate = rates[i + 1];
-      const threshold = currentRate.threshold;
-      const nextThreshold = nextRate ? nextRate.threshold : Infinity;
-
-      if (remainingIncome > threshold) {
-        const taxableInThisBracket = Math.min(remainingIncome - threshold, nextThreshold - threshold);
-        const taxInThisBracket = taxableInThisBracket * currentRate.rate;
-        totalTax += taxInThisBracket;
-        remainingIncome -= taxableInThisBracket;
-
+    // Special handling for India
+    if (country === 'India') {
+      if (annualIncome <= 300000) {
+        totalTax = 0;
         taxSlabs.push({
-          threshold,
-          nextThreshold,
-          rate: currentRate.rate * 100,
-          taxableAmount: taxableInThisBracket,
-          taxAmount: taxInThisBracket
+          threshold: 0,
+          nextThreshold: 300000,
+          rate: 0,
+          taxableAmount: annualIncome,
+          taxAmount: 0
         });
+      } else {
+        // Calculate tax for each slab
+        const slabs = [
+          { min: 300001, max: 600000, rate: 0.05 },
+          { min: 600001, max: 900000, rate: 0.10 },
+          { min: 900001, max: 1200000, rate: 0.15 },
+          { min: 1200001, max: 1500000, rate: 0.20 },
+          { min: 1500001, max: Infinity, rate: 0.30 }
+        ];
+
+        let remainingAmount = annualIncome;
+        let previousThreshold = 300000;
+
+        for (const slab of slabs) {
+          if (remainingAmount > previousThreshold) {
+            const taxableAmount = Math.min(remainingAmount - previousThreshold, slab.max - previousThreshold);
+            const taxInSlab = taxableAmount * slab.rate;
+            totalTax += taxInSlab;
+
+            taxSlabs.push({
+              threshold: previousThreshold,
+              nextThreshold: slab.max,
+              rate: slab.rate * 100,
+              taxableAmount: taxableAmount,
+              taxAmount: taxInSlab
+            });
+
+            previousThreshold = slab.max;
+          }
+        }
+      }
+    } else {
+      // Original logic for other countries
+      for (let i = 0; i < rates.length; i++) {
+        const currentRate = rates[i];
+        const nextRate = rates[i + 1];
+        const threshold = currentRate.threshold;
+        const nextThreshold = nextRate ? nextRate.threshold : Infinity;
+
+        if (remainingIncome > threshold) {
+          const taxableInThisBracket = Math.min(remainingIncome - threshold, nextThreshold - threshold);
+          const taxInThisBracket = taxableInThisBracket * currentRate.rate;
+          totalTax += taxInThisBracket;
+          remainingIncome -= taxableInThisBracket;
+
+          taxSlabs.push({
+            threshold,
+            nextThreshold,
+            rate: currentRate.rate * 100,
+            taxableAmount: taxableInThisBracket,
+            taxAmount: taxInThisBracket
+          });
+        }
       }
     }
 

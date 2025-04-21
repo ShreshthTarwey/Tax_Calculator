@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaxCalculator from '@/components/TaxCalculator';
 import TaxSuggestion from '@/components/TaxSuggestion';
+import TaxComparisonGraph from '@/components/TaxComparisonGraph';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
@@ -223,6 +224,19 @@ export default function Home() {
             </AnimatePresence>
           </motion.div>
         </div>
+
+        {/* Tax Comparison Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8"
+        >
+          <TaxComparisonGraph 
+            income={taxResult?.income} 
+            currency={taxResult?.originalCurrency} 
+          />
+        </motion.div>
       </motion.main>
     </div>
   );
