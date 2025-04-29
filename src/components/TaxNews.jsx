@@ -12,9 +12,14 @@ export default function TaxNews() {
     const loadNews = async () => {
       try {
         const articles = await fetchTaxNews();
-        setNews(articles);
+        if (articles.length === 0) {
+          setError('No tax news available at the moment. Please try again later.');
+        } else {
+          setNews(articles);
+        }
       } catch (err) {
-        setError('Failed to load news');
+        setError('Unable to load tax news. Please check your internet connection and try again.');
+        console.error('Error loading news:', err);
       } finally {
         setLoading(false);
       }
@@ -26,6 +31,7 @@ export default function TaxNews() {
   if (loading) {
     return (
       <div className="w-full p-4">
+        <h2 className="text-2xl font-bold mb-4">Latest Tax News</h2>
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 bg-gray-200 rounded"></div>
@@ -37,8 +43,11 @@ export default function TaxNews() {
 
   if (error) {
     return (
-      <div className="w-full p-4 text-red-500">
-        {error}
+      <div className="w-full p-4">
+        <h2 className="text-2xl font-bold mb-4">Latest Tax News</h2>
+        <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg">
+          {error}
+        </div>
       </div>
     );
   }
