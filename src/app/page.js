@@ -6,6 +6,7 @@ import TaxCalculator from '@/components/TaxCalculator';
 import TaxSuggestion from '@/components/TaxSuggestion';
 import TaxComparisonGraph from '@/components/TaxComparisonGraph';
 import ExportReports from '@/components/ExportReports';
+import TaxNews from '@/components/TaxNews';
 
 export default function Home() {
   const [taxResult, setTaxResult] = useState(null);
@@ -258,6 +259,16 @@ export default function Home() {
               />
             </motion.div>
           )}
+
+          {/* Add TaxNews component after existing components */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-gray-800/80 backdrop-blur-lg p-6 rounded-lg shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors duration-200"
+          >
+            <TaxNews />
+          </motion.div>
         </div>
       </motion.main>
     </div>
